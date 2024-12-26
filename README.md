@@ -1,8 +1,8 @@
-<a href="https://youtu.be/-7n2Yv9aHCs" target="_blank">
+<a href="https://youtu.be/cUr-fFbYhlA" target="_blank">
   <img src="https://github.com/user-attachments/assets/f5d0d0bd-039b-4bb6-b8ae-42ab97994175" alt="youtube-urban">
 </a>
 
-[![YouTube Subscribe](https://img.shields.io/badge/YouTube-Subscribe-red?style=for-the-badge&logo=youtube)](https://www.youtube.com/watch?v=-7n2Yv9aHCs)
+[![YouTube Subscribe](https://img.shields.io/badge/YouTube-Subscribe-red?style=for-the-badge&logo=youtube)](https://www.youtube.com/watch?v=cUr-fFbYhlA)
 [![Discord](https://img.shields.io/badge/Discord-Join-blue?style=for-the-badge&logo=discord)](https://discord.gg/EkwWvFS)
 [![Tebex Store](https://img.shields.io/badge/Tebex-Store-green?style=for-the-badge&logo=shopify)](https://eyestore.tebex.io/)
 
