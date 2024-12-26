@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>dk-notify</title>
+    <link rel="stylesheet" href="../assets/css/app.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" rel="stylesheet">
+  </head>
+
+<div id="app">
+
+    <div v-if="isSettingsMenuOpen" class="fixed inset-0 z-50 flex items-center justify-center">
+      
+        <div class="w-full max-w-md rounded-lg overflow-hidden shadow-lg transform transition-transform duration-300 translate-y-0">
+          <div :class="{'bg-gray-800 text-white border border-gray-700': currentPreviewMode === 'dark', 'bg-white text-gray-800 border border-gray-300': currentPreviewMode === 'normal'}" class="relative">
+            <div class="px-6 py-4">
+              <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-center" :style="{'color': currentPreviewMode === 'dark' ? 'white' : 'black'}">Settings</h3>
+                <button @click="toggleSettingsMenu" class="text-gray-500 hover:text-gray-800">
+                  <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+              </div>
+
+              <div v-for="item in items" :key="item.id" :class="`max-w-sm w-full rounded-2xl shadow-2xl overflow-hidden mx-auto mb-4 mt-6 transition-all transform hover:scale-105 ${currentPreviewMode === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`">
+                <div class="relative">
+                  <div class="w-full bg-gray-800">
+                    <div class="w-full bg-gray-700">
+                      <div :style="{width: item.progress + '%'}" :class="[getProgressBarClass(item.type), 'h-2 transition-width duration-500 ease-out']"></div>
+                    </div>
+                  </div>
+                  <div :class="`flex items-center justify-between px-4 py-3 text-sm font-medium border-b ${getColor(item.type, currentPreviewMode)}`">
+                    <div class="flex items-center">
+                      <i
+                      :ref="`icon-success-${item.id}`"
+                      :class="`las ${getIcon(item.type)} la-lg mr-2`"
+                      :style="{
+                        color: getIconColor(item.type, currentPreviewMode),
+                        display: item.type === 'hide' ? 'none' : 'inline'
+                      }"
+                    ></i>
+                      <span :ref="`title-${item.id}`" :style="{color: getTextColor(item.type, currentPreviewMode), fontFamily: fontSettings.family, fontWeight: fontSettings.weight}">{{ item.title }}</span>
+                    </div>
+                    <div class="flex items-center">
+                      <button @click="togglePause(item)" :class="`mr-2 ${currentPreviewMode === 'dark' ? 'text-gray-300' : 'text-gray-700'}`">
+                        <i :class="item.paused ? 'fas fa-play' : 'fas fa-pause'"></i> 
+                      </button>
+                      <i class="fas fa-times cursor-pointer" :class="`${currentPreviewMode === 'dark' ? 'text-gray-300' : 'text-gray-700'}`" @click="removeItem(item.id)"></i> 
+                    </div>
+                  </div>
+                  <div class="px-4 py-3">
+                    <img v-if="item.isImage" :src="item.message" alt="Image" class="max-w-full max-h-60 w-auto h-auto rounded mx-auto" />
+                    <p v-else :ref="`message-${item.id}`" 
+                       :style="{fontFamily: fontSettings.family, fontWeight: fontSettings.weight}" 
+                       :class="`${currentPreviewMode === 'dark' ? 'text-gray-300' : 'text-gray-700'}`">
+                      {{ item.message }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div :class="`${currentPreviewMode === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} mt-6 rounded-xl shadow-lg`">
+                <h4 class="text-lg font-semibold" :class="`${currentPreviewMode === 'dark' ? 'text-white' : 'text-gray-800'}`">Font Settings</h4>
+                
+                <div class="space-y-4">
+
+                  <div class="space-y-4">
+                    <div>
+                      <label class="text-sm font-medium text-gray-300" :class="`${currentPreviewMode === 'dark' ? 'text-white' : 'text-gray-700'}`">Success Icon:</label>
+                      <div class="mt-1 relative">
+                        <select v-model="iconSettings.success" @change="saveIconSettings" class="block w-full pl-3 pr-10 py-2 text-base sm:text-sm rounded-md shadow-sm appearance-none"
+                        :class="currentPreviewMode === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-700'">
+                        <option v-for="icon in availableIcons.success" :value="icon">{{ icon }}</option>
+                      </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                          <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M5.5 7L10 11.5 14.5 7z"/>
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                        <label :class="`${currentPreviewMode === 'dark' ? 'text-white' : 'text-gray-700'}`" class="text-sm font-medium text-gray-300">Error Icon:</label>
+                        <div class="mt-1 relative">
+                          <select v-model="iconSettings.error" @change="saveIconSettings" class="block w-full pl-3 pr-10 py-2 text-base sm:text-sm rounded-md shadow-sm appearance-none"
+                          :class="currentPreviewMode === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-700'">
+                          <option v-for="icon in availableIcons.error" :value="icon">{{ icon }}</option>
+                        </select>
+                          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                              <path d="M5.5 7L10 11.5 14.5 7z"/>
+                            </svg>
+                          </div>
+                        </div>
+                    </div>
+
+                    <div>
+                      
+                      <label :class="`${currentPreviewMode === 'dark' ? 'text-white' : 'text-gray-700'}`" class="text-sm font-medium text-gray-300">Warning Icon:</label>
+                      <div class="mt-1 relative">
+                        <select v-model="iconSettings.warning" @change="saveIconSettings" class="block w-full pl-3 pr-10 py-2 text-base sm:text-sm rounded-md shadow-sm appearance-none"
+                        :class="currentPreviewMode === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-700'">
+                        <option v-for="icon in availableIcons.warning" :value="icon">{{ icon }}</option>
+                      </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                          <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M5.5 7L10 11.5 14.5 7z"/>
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="text-sm font-medium" :class="currentPreviewMode === 'dark' ? 'text-white' : 'text-gray-700'">Font Family:</label>
+                    <div class="mt-1 relative">
+                      <select v-model="fontSettings.family" @change="saveFontSettings" class="block w-full pl-3 pr-10 py-2 text-base sm:text-sm rounded-md shadow-sm appearance-none"
+                        :class="currentPreviewMode === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-700'">
+                        <option value="sans-serif">Sans Serif</option>
+                        <option value="serif">Serif</option>
+                        <option value="arial">Arial</option>
+                        <option value="verdana">Verdana</option>
+                        <option value="tahoma">Tahoma</option>
+                      </select>
+                      <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2"
+                        :class="currentPreviewMode === 'dark' ? 'text-gray-400' : 'text-gray-600'">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                          <path d="M5.5 7L10 11.5 14.5 7z"/>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+            
+                  <div>
+                    <label class="text-sm font-medium" :class="currentPreviewMode === 'dark' ? 'text-white' : 'text-gray-700'">Font Weight:</label>
+                    <div class="mt-1 relative">
+                      <select v-model="fontSettings.weight" @change="saveFontSettings" class="block w-full pl-3 pr-10 py-2 text-base sm:text-sm rounded-md shadow-sm appearance-none"
+                        :class="currentPreviewMode === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-700'">
+                        <option value="normal">Normal</option>
+                        <option value="bold">Bold</option>
+                        <option value="lighter">Lighter</option>
+                        <option value="bolder">Bolder</option>
+                        <option value="100">100</option>
+                      </select>
+                      <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2"
+                        :class="currentPreviewMode === 'dark' ? 'text-gray-400' : 'text-gray-600'">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                          <path d="M5.5 7L10 11.5 14.5 7z"/>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              
+                <button @click="saveFontSettings" class="mt-5 w-full bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-md px-4 py-2 transition duration-300 ease-in-out">
+                  Save Font
+                </button>
+              </div>
+              
+              
+              
+              <div class="mt-4">
+                <div :class="{'bg-gray-800 text-white': currentPreviewMode === 'dark', 'bg-white text-gray-800': currentPreviewMode === 'normal'}" class="shadow-md rounded-lg p-4">
+                  <div class="flex justify-between items-center">
+                    <span :class="{'bg-gray-800 text-white': currentPreviewMode === 'dark', 'bg-white text-gray-800': currentPreviewMode === 'normal'}">Theme</span>
+                    <div>
+                      <button
+                        @click="applySettings('dark')"
+                        class="px-3 py-1 text-sm rounded-full bg-gray-800 text-white hover:bg-gray-700"
+                      >
+                        Dark
+                      </button>
+                      <button
+                        @click="applySettings('normal')"
+                        class="px-3 py-1 text-sm rounded-full bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      >
+                        Normal
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="text-center mt-6">
+                <button
+                  @click="toggleSettingsMenu"
+                  :class="{'bg-gray-800 hover:bg-gray-700 text-white': currentPreviewMode === 'dark', 'bg-blue-500 hover:bg-blue-600 text-white': currentPreviewMode === 'normal'}"
+                  class="px-6 py-2 rounded-full font-semibold transition duration-300 ease-in-out"
+                >
+                  Close Settings
+                </button>
+              </div>
+            </div>              
+          </div>
+
+
+        </div>
+      </div>
+      
+      
+      
+      
+      
+      
+  
+  
+  
+
+
+      <div v-else="isSettingsMenuOpen" v-for="item in items" :key="item.id" :class="`max-w-sm w-full rounded-2xl shadow-2xl overflow-hidden mx-auto mb-4 mt-6 transition-all transform hover:scale-105 ${currentPreviewMode === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`">
+        <div class="relative">
+          <div class="w-full bg-gray-800">
+            <div class="w-full bg-gray-700">
+              <div :style="{width: item.progress + '%'}" :class="[getProgressBarClass(item.type), 'h-2 transition-width duration-500 ease-out']"></div>
+            </div>
+          </div>
+          <div :class="`flex items-center justify-between px-4 py-3 text-sm font-medium border-b ${getColor(item.type, currentPreviewMode)}`">
+            <div class="flex items-center">
+              <i
+              :ref="`icon-success-${item.id}`"
+              :class="`las ${getIcon(item.type)} la-lg mr-2`"
+              :style="{
+                color: getIconColor(item.type, currentPreviewMode),
+                display: item.type === 'hide' ? 'none' : 'inline'
+              }"
+            ></i>
+              <span :ref="`title-${item.id}`" :style="{color: getTextColor(item.type, currentPreviewMode), fontFamily: fontSettings.family, fontWeight: fontSettings.weight}">{{ item.title }}</span>
+            </div>
+            <!-- <div class="flex items-center">
+              <button @click="togglePause(item)" :class="`mr-2 ${currentPreviewMode === 'dark' ? 'text-gray-300' : 'text-gray-700'}`">
+                <i :class="item.paused ? 'fas fa-play' : 'fas fa-pause'"></i> 
+              </button>
+              <i class="fas fa-times cursor-pointer" :class="`${currentPreviewMode === 'dark' ? 'text-gray-300' : 'text-gray-700'}`" @click="removeItem(item.id)"></i> 
+            </div> -->
+          </div>
+          <div class="px-4 py-3">
+            <img v-if="item.isImage" :src="item.message" alt="Image" class="max-w-full max-h-60 w-auto h-auto rounded mx-auto" />
+            <p v-else :ref="`message-${item.id}`" 
+               :style="{fontFamily: fontSettings.family, fontWeight: fontSettings.weight}" 
+               :class="`${currentPreviewMode === 'dark' ? 'text-gray-300' : 'text-gray-700'}`">
+              {{ item.message }}
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      
+      
+      
+  
+
+
+  </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<script src="./assets/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+<script src="./vue.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+</body>
+
+</html>
