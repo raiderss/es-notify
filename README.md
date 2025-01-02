@@ -27,8 +27,6 @@ AddEventHandler('TriggerNotification', function(Type, Header, Message)
 end)
 ```
 
-Additionally, as a reminder, you can use the code snippet above to hide the HUD when the gallery is opened. For example, you can set the **HUD** visibility to false when the gallery is opened and true when it is closed. Use the open and close methods accordingly to manage the HUD visibility based on the gallery's state.
-
 -----------------
 
 Features of the Free Notification Script for FiveM
